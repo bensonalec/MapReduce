@@ -8,18 +8,31 @@ import (
 		// "time"
 )
 
-var pool []net.Conn
-var activePool []net.Conn
-var jobs []string
-
 var CONNECTION_PACKET string = "HEADER:CONN||BODY:"
 var ACK_PACKET string =  "HEADER:ACK||BODY:"
 var DATA_PACKET string = "HEADER:DATA||BODY:"
 var DISCON_PACKET string = "HEADER:STOP||BODY:"
 
+type node struct {
+	name string
+	connection net.Conn
+	next *node
+}
+
+var pool []net.Conn
+var nodeHead node = node{name:"Unused"}
+var nodeTail node = nodeHead
+var jobs []string
+
+
 var toSum string = "[2,4,6,8]"
 
 func main() {
+	if(nodeHead.name != "Unused") {
+		fmt.Println(nodeHead)
+	} else {
+		fmt.Println("No head")
+	}
 	jobs = append(jobs,toSum)
 	go assignJob()
 
@@ -54,21 +67,66 @@ func removeFromPool(c net.Conn) {
 
 }
 
+func addToPool(c net.Conn,name string) {
+	fmt.Print(name)
+	if(nodeHead == nodeTail) {
+		//now set the next node to be this node
+		//head is always empty?
+		//so maybe append to tail
+		var newNode = &node{name:strings.TrimSpace(name),connection:c}
+		nodeHead.next = newNode
+		nodeTail = *nodeHead.next
+		// fmt.Println("FSOSFSSF")
+		// fmt.Println("No head")
+	}  else {
+		fmt.Println("Appending")
+		var newNode = &node{name:strings.TrimSpace(name),connection:c}
+		var currentNode = nodeHead
+
+		for(currentNode.next != nil) {
+			fmt.Println("Node Find:",currentNode.name)
+			currentNode = *currentNode.next
+		}
+		
+		currentNode.next = newNode
+		nodeTail = *currentNode.next
+	}
+	printNodes()
+} 
+
+func printNodes() {
+	var currentNode = nodeHead
+	fmt.Println("Printing List")
+	fmt.Println(nodeTail.name)
+	
+	for(currentNode.next != nil) {
+		fmt.Println("Node:",currentNode.name)
+		currentNode = *currentNode.next
+	}
+	fmt.Println("Node:",currentNode.name)
+	currentNode = *currentNode.next
+	fmt.Println("Node:",currentNode.name)
+
+}
+
 func parsePacket(received string, c net.Conn) string {
 	packetSplit := strings.Split(received,"||")
 	headerContents := strings.Split(packetSplit[0],":")[1]
 	bodyContents := strings.Split(packetSplit[1],":")[1]
 	if (headerContents == "CONN") {
-		pool = append(pool, c)
-		fmt.Println("Added to pool",pool)
+		// pool = append(pool, c)
+		// fmt.Println("Added to pool",pool)
+		addToPool(c,bodyContents)
 		return ACK_PACKET
 	} else if (headerContents == "ACK") {
 		return "N/A"
 	} else if (headerContents == "DATA") {
 		//read the data in the body into an array of integers
-		fmt.Println(bodyContents)
+		fmt.Println("Body:",bodyContents)
+		//remove that problem from the problem queue
 		return ACK_PACKET
 	} else if (headerContents == "STOP") {
+		fmt.Println("STOPPED!")
 		removeFromPool(c)
 		c.Close()
 		return "STOP"

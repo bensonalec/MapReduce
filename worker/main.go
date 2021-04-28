@@ -17,6 +17,8 @@ var ACK_PACKET string =  "HEADER:ACK||BODY:"
 var DATA_PACKET string = "HEADER:DATA||BODY:"
 var DISCON_PACKET string = "HEADER:STOP||BODY:"
 
+var nodeName string = "1"
+
 func main() {
 	sendToAddress("127.0.0.1:8090",CONNECTION_PACKET)
 }
@@ -84,8 +86,7 @@ func sendToAddress(address string, message string) string {
     }()
 
 	//Send the connection packet
-	sendMessage(c,message)
-	fmt.Println("IDKMAN")
+	sendMessage(c,message+nodeName)
 	//Check that the response was properly acknowledged
 	received := readMessage(c)
 	// Parse the newly received packet
@@ -93,7 +94,7 @@ func sendToAddress(address string, message string) string {
 	//Wait for instructions
 	for {
 		_ = readMessage(c)
-		toSend:= parsePacket(received)
+		toSend := parsePacket(received)
 		if(toSend != "N/A") {
 			sendMessage(c,toSend)
 		}
