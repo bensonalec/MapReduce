@@ -6,11 +6,32 @@ import dill as pickle
 import codecs
 
 def map(inputData):
-    return sum(inputData)
+    cards = inputData[1]
+    suitDict = {}
+    for card in cards:
+        suit = card[0]
+        if suit in suitDict.keys():
+            suitDict[suit] += 1
+        else:
+            suitDict[suit] = 1
+    suitList = [(x,y) for x,y in suitDict.items()]
+    return suitList
 
 def reduce(inputData):
-    return sum(inputData)
-
+    suitDict = {}
+    for deck in inputData:
+        for pair in deck:
+            suit = pair[0]
+            count = pair[1]
+            print(suit)
+            print(count)
+            if suit in suitDict.keys():
+                print("Exists")
+                suitDict[suit] += int(count)
+            else:
+                suitDict[suit] = int(count)
+    suitList = [(x,y) for x,y in suitDict.items()]
+    return suitList
 
 CONNECTION_PACKET = "HEADER:CONN||BODY:"
 ACK_PACKET =  "HEADER:ACK||BODY:"
@@ -34,7 +55,7 @@ class connectionNode:
 
 def buildJobs():
     global jobs
-    jobs = [[1,2,3,mapFunc],[3,4,5,mapFunc],[6,3,2,mapFunc]]
+    jobs = [["deck1",[("heart",1),("diamond",1),("club",1),("spade",1),("heart",1),("diamond",1),("club",1),("spade",1)],mapFunc],["deck1",[("heart",1),("diamond",1),("club",1),("spade",1)],mapFunc]]
 
 def sendJobs():
     global jobs
@@ -139,7 +160,7 @@ def parsePacket(c,rec):
         #do something with the data
         name = bodyContents.split("//")[0]
         answer = bodyContents.split("//")[1]
-        answers.append(int(answer))
+        answers.append(json.loads(answer))
         print("New answer:",answers)
         addToPool(c,name)
         # print(bodyContents)

@@ -24,11 +24,12 @@ def parsePacket(c,rec):
     elif packetType == "ACK":
         return 1
     elif packetType == "DATA":
-        toSum = json.loads(bodyContents)
-        func = toSum[-1]
+        inp = json.loads(bodyContents)
+        func = inp[-1]
         func = pickle.loads(codecs.decode(func.encode(), "base64"))
-        answer = func(toSum[:-1])
-        sendMessage(c,DATA_PACKET+name+"//"+str(answer))
+        # print(inp[:-1])
+        answer = func(inp[:-1])
+        sendMessage(c,DATA_PACKET+name+"//"+json.dumps(answer))
 
         return 1
 
